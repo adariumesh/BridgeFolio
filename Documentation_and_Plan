@@ -1,0 +1,400 @@
+Here is the exhaustive documentation for the BridgeFolio project, from initial setup to the final demo recording.
+
+-----
+
+## 📚 BridgeFolio: Complete Project Documentation
+
+### 1.0 Project Overview
+
+**BridgeFolio** is a "life simulator" game designed to teach fundamental financial literacy concepts. It provides a gamified sandbox where users manage a complete financial portfolio, balancing the stability of traditional finance (TradFi) with the volatility of decentralized finance (DeFi).
+
+#### 1.1 The Concept
+
+The user receives a monthly "paycheck" into a mock Capital One account. After "bills" are automatically paid, they must decide how to allocate their disposable income:
+
+  * **"TradFi" Path:** Move money to a safe, interest-bearing Capital One Savings account.
+  * **"DeFi" Path:** "Bridge" money to a Solana wallet to trade a volatile, custom SPL token (BridgeFolio Coin - FVC).
+
+#### 1.2 The Educational Goal (T. Rowe Price)
+
+An **AI Mentor** monitors the user's portfolio balance in real-time. It triggers educational pop-ups based on the user's actions, teaching the core T. Rowe Price concepts of:
+
+  * **Risk vs. Return:** (e.g., 100% in savings)
+  * **Volatility:** (e.g., 100% in Solana)
+  * **Diversification & Asset Allocation:** (e.g., a 50/50 split)
+
+#### 1.3 The "Sponsor Sandwich"
+
+This project is a powerful "mashup" that directly integrates all three sponsor technologies:
+
+  * **[Capital One]:** The Nessie API acts as the foundational "TradFi Engine" for checking, savings, and all traditional bank transactions.
+  * **[Solana (MLH)]:** Serves as the high-speed "DeFi Engine." This is not a simple transaction; we are creating a custom SPL token (FVC) and simulating a high-frequency market.
+  * **[T. Rowe Price]:** The entire game *is* the T. Rowe Price challenge. The theme provides the educational "glue" that connects the TradFi and DeFi worlds.
+
+-----
+
+### 2.0 Technical Architecture
+
+The system is a standard three-part application:
+
+1.  **Frontend (React):** A single-page application that serves as the game UI. It manages user state and communicates with the backend.
+2.  **Backend (Node.js/Express):** A proxy server that securely holds API keys, runs the "bridge" logic, and simulates market volatility.
+3.  **APIs & Ledgers:**
+      * Capital One Nessie API
+      * Solana Devnet
+
+#### 2.1 Core Data Flow (The "Bridge")
+
+This is the most critical interaction:
+
+1.  User clicks "Bridge $100 to DeFi" on the **Frontend**.
+2.  Frontend sends a request to `POST /api/bridge-to-solana`.
+3.  **Backend** receives the request and executes two actions in sequence:
+    a. **Nessie API:** `POST /accounts/{id}/withdrawals` to remove $100 from the user's checking account.
+    b. **Solana API:** `spl-token transfer` to send 100 FVC tokens from the "Bank" wallet to the "User's" wallet.
+4.  Backend returns a `200 OK` to the frontend, which updates the UI.
+
+-----
+
+### 3.0 Phase 0: Pre-Hackathon Setup
+
+This setup is **critical** and should be completed before the hackathon timer begins.
+
+#### 3.1 Tools & Environment
+
+1.  Install [Node.js](https://nodejs.org/)
+2.  Install the [Solana CLI Tool Suite](https://docs.solana.com/cli/install)
+3.  Install the [SPL Token CLI](https://www.google.com/search?q=https://spl.solana.com/token%23cli)
+4.  Create a developer account with [Capital One](https://developer.capitalone.com/) and get your Nessie API Key.
+
+#### 3.2 Task: Create the FVC SPL Token
+
+This token will be the "BridgeFolio Coin" (FVC) for the DeFi simulation.
+
+1.  **Set Config to Devnet:**
+
+    ```bash
+    solana config set --url https://api.devnet.solana.com
+    ```
+
+2.  **Create "Bank" Keypair:** This wallet will mint and hold the total supply of FVC.
+
+    ```bash
+    solana-keygen new --outfile ~/BridgeFolio-bank-keypair.json
+    ```
+
+3.  **Airdrop Devnet SOL:** You need SOL to pay for transaction fees.
+
+    ```bash
+    solana airdrop 2 ~/BridgeFolio-bank-keypair.json
+    ```
+
+4.  **Create the Token (FVC):**
+
+    ```bash
+    spl-token create-token ~/BridgeFolio-bank-keypair.json
+    ```
+
+    > **SAVE THIS:** This will output the **Token Mint Address** (e.g., `FVCm...`).
+
+5.  **Create a Token Account for the Bank:**
+
+    ```bash
+    spl-token create-account <YOUR-TOKEN-MINT-ADDRESS> ~/BridgeFolio-bank-keypair.json
+    ```
+
+    > **SAVE THIS:** This will output the **Bank's Token Account Address** (e.g., `BankFVC...`).
+
+6.  **Mint the Total Supply:**
+
+    ```bash
+    spl-token mint <YOUR-TOKEN-MINT-ADDRESS> 1000000000 ~/BridgeFolio-bank-keypair.json
+    ```
+
+    (This mints 1 Billion FVC to your bank's token account).
+
+#### 3.3 Environment Setup
+
+Create a `.env` file in your backend directory. **Add this file to `.gitignore`**.
+
+```
+# .env
+
+# Capital One Nessie API
+CAPITAL_ONE_API_KEY=your_api_key_here
+
+# Solana "Bank" Configuration
+SOLANA_BANK_KEYPAIR_PATH=./BridgeFolio-bank-keypair.json
+FVC_MINT_ADDRESS=your_token_mint_address_from_step_4
+FVC_BANK_TOKEN_ACCOUNT=your_bank_token_account_from_step_5
+```
+
+-----
+
+### 4.0 Phase 1: Backend Implementation (Node.js/Express)
+
+The backend is the "Game Master" that connects all services.
+
+#### 4.1 Dependencies
+
+```bash
+npm install express cors axios @solana/web3.js @solana/spl-token
+```
+
+#### 4.2 The "Price Oracle" (Volatility Simulator)
+
+To simulate volatility without a complex database, run this simulation in your main `server.js` file.
+
+```javascript
+// --- Price Oracle Simulation ---
+let fvcPrice = 1.00; // Initial price: 1 FVC = $1.00
+
+setInterval(() => {
+    // Generate a random % change between -15% and +15%
+    const changePercent = (Math.random() - 0.47) * 0.3; 
+    fvcPrice = Math.max(0.10, fvcPrice + (fvcPrice * changePercent)); // Ensure price > $0.10
+    console.log(`New FVC Price: $${fvcPrice.toFixed(4)}`);
+}, 5000); // Update price every 5 seconds
+
+// --- API Endpoint for Frontend ---
+app.get('/api/price', (req, res) => {
+    res.json({ price: fvcPrice });
+});
+```
+
+#### 4.3 API Endpoint: `POST /api/create-user`
+
+  * **Role:** Onboards a new user.
+  * **Payload:** `{ "solanaPublicKey": "user_public_key_from_frontend" }`
+  * **Actions:**
+    1.  **Nessie:** Call `POST /customers` to create a new mock customer.
+    2.  **Nessie:** Call `POST /customers/{id}/accounts` to create a "Checking" account.
+    3.  **Nessie:** Call `POST /customers/{id}/accounts` to create a "Savings" account.
+    4.  **Solana:** Use the `spl-token` library to create an **Associated Token Account** for the user's `solanaPublicKey` to hold FVC. This is paid for by your "Bank" keypair.
+  * **Response:**
+    ```json
+    {
+      "customerId": "...",
+      "checkingId": "...",
+      "savingsId": "...",
+      "userFVCAccountAddress": "..."
+    }
+    ```
+
+#### 4.4 API Endpoint: `POST /api/bridge-to-solana`
+
+  * **Role:** The core "mashup" logic.
+  * **Payload:** `{ "amount": 100, "nessieAccountId": "...", "solanaTokenAccount": "..." }`
+  * **Actions:**
+    1.  **Nessie:** Call `POST /accounts/{nessieAccountId}/withdrawals` for the specified `amount`.
+    2.  **Solana:** Call the `transfer` function from `spl-token` library.
+          * **From:** `FVC_BANK_TOKEN_ACCOUNT` (from `.env`)
+          * **To:** `solanaTokenAccount` (from payload)
+          * **Authority:** Your "Bank" keypair
+          * **Amount:** `amount` (assuming 1 FVC = $1)
+  * **Response:** `200 OK` with `{ "message": "Bridge successful" }`
+
+-----
+
+### 5.0 Phase 2: Frontend Implementation (React)
+
+The frontend is the entire game UI.
+
+#### 5.1 Key Libraries
+
+```bash
+npm install react react-dom axios @solana/web3.js
+```
+
+#### 5.2 Onboarding Flow & State
+
+When the user clicks "New Game":
+
+1.  **Generate Keypair:** Use `@solana/web3.js` to generate a new keypair *in the browser*.
+    ```javascript
+    const userKeypair = Keypair.generate();
+    const userPublicKey = userKeypair.publicKey.toString();
+    ```
+2.  **HACKATHON CAVEAT:** Store the private key in `localStorage`. This is **insecure** but necessary for a hackathon to avoid a wallet adapter.
+    ```javascript
+    localStorage.setItem("solanaPrivateKey", JSON.stringify(Array.from(userKeypair.secretKey)));
+    ```
+3.  **Call Backend:** `POST /api/create-user` with `{ solanaPublicKey }`.
+4.  **Save State:** Save all IDs from the response (customerId, checkingId, etc.) in a React Context or global state.
+
+#### 5.3 "TradFi" UI (Capital One)
+
+  * **Paycheck / Bills:** These are simple buttons that call your backend, which then proxies requests to the Nessie API (`POST /deposits`, `POST /withdrawals`).
+  * **Simulated Interest:** The Nessie API doesn't auto-calculate interest. **Fake it on the frontend** for the demo.
+    ```javascript
+    // In your SavingsAccount component
+    useEffect(() => {
+        // This interval simulates interest accumulation
+        const interestInterval = setInterval(() => {
+            // This updates UI ONLY.
+            setDisplayedBalance(prev => prev * 1.00001); 
+        }, 3000);
+        return () => clearInterval(interestInterval);
+    }, []);
+    ```
+
+#### 5.4 "DeFi" UI (Solana)
+
+This is the most advanced UI component, requiring two separate live data feeds.
+
+1.  **Feed 1: Live Token Balance (WebSocket)**
+    Use `connection.onAccountChange` to get *instant* balance updates from Solana.
+
+    ```javascript
+    // In your DeFiWallet component
+    const connection = new Connection(clusterApiUrl('devnet'));
+
+    useEffect(() => {
+        const subscriptionId = connection.onAccountChange(
+            new PublicKey(userFVCAccountAddress), // User's FVC wallet
+            (accountInfo) => {
+                // Parse accountInfo.data to get the new token balance
+                const newBalance = /* ...parse logic... */;
+                setFvcBalance(newBalance);
+            },
+            'confirmed'
+        );
+        return () => connection.removeAccountChangeListener(subscriptionId);
+    }, [userFVCAccountAddress]);
+    ```
+
+2.  **Feed 2: Live Token Price (Polling)**
+    Poll your backend's `/api/price` endpoint.
+
+    ```javascript
+    useEffect(() => {
+        const priceInterval = setInterval(async () => {
+            const res = await axios.get('/api/price');
+            setLivePrice(res.data.price);
+        }, 5000); // Match your backend's interval
+        return () => clearInterval(priceInterval);
+    }, []);
+    ```
+
+3.  **Rendered Value:** The total DeFi value is simply:
+    `const totalDeFiValue = fvcBalance * livePrice;`
+
+-----
+
+### 6.0 Phase 3: The "Mentor" Layer (T. Rowe Price)
+
+This is a React component that watches your global state and triggers a modal. **Do not use a live AI (like Gemini) for this.** It's too slow and unreliable for a demo. **Pre-write the lessons.**
+
+```javascript
+// In your main App.js or Game.js
+function MentorLogic({ nessieBalance, deFiValue }) {
+    const [mentorMessage, setMentorMessage] = useState(null);
+
+    useEffect(() => {
+        const totalValue = nessieBalance + deFiValue;
+        if (totalValue < 500) return; // Don't trigger too early
+
+        const riskRatio = deFiValue / totalValue;
+
+        // Trigger 1: Too Safe
+        if (riskRatio < 0.1) {
+            setMentorMessage({
+                title: "Playing it Safe!",
+                body: "Your money is secure, but you're missing out on growth. Let's talk about Risk vs. Return."
+            });
+        }
+        // Trigger 2: Too Risky
+        else if (riskRatio > 0.9) {
+            setMentorMessage({
+                title: "High Roller Alert!",
+                body: "Whoa! You're all-in on DeFi, but your 'rent' money is at risk! You just experienced Volatility. Let's learn about Diversification."
+            });
+        }
+        // Trigger 3: Balanced
+        else if (riskRatio > 0.4 && riskRatio < 0.6) {
+             setMentorMessage({
+                title: "Great Job!",
+                body: "You've built a balanced portfolio! This is a core concept of Asset Allocation."
+            });
+        }
+    }, [nessieBalance, deFiValue]); // Runs every time balances change
+
+    // Render a modal if mentorMessage is not null
+    return mentorMessage ? <MentorPopup message={mentorMessage} /> : null;
+}
+```
+
+-----
+
+### 7.0 Key Caveats & "Hacks" (For Judges)
+
+Be transparent about these shortcuts. It shows you understand the tech's limitations.
+
+  * **Insecure Key Management:** The Solana private key is in `localStorage`. This is a demo-only shortcut to avoid needing a third-party wallet (Phantom, Solflare) and provides a seamless "Step 1" UX.
+  * **Centralized "Bridge":** This is a *simulated* bridge. A real one is a complex protocol. Ours is a centralized backend service that *simulates* the swap by coordinating two different APIs.
+  * **Centralized Price Oracle:** The FVC price is *not* from a real AMM (like Raydium). We are simulating it on our backend. This is a **feature, not a bug**, as it *guarantees* we can demonstrate volatility for the demo.
+  * **Simulated Interest:** The Nessie savings interest is a frontend-only UI trick to show the concept. No actual interest-bearing deposits are made.
+
+-----
+
+### 8.0 Demo Recording Script (The Final Pitch)
+
+**[3 minutes MAX]**
+
+**[0:00 - 0:30] The Intro & Problem**
+
+> "Hi, we're [Team Name], and this is **BridgeFolio**.
+>
+> Financial literacy is a huge problem. Concepts like diversification and asset allocation are abstract and boring. We built a 'life simulator' game to make learning them fast, fun, and tangible.
+>
+> We've used three sponsors in a 'Sponsor Sandwich': Capital One as the stable 'TradFi' layer, Solana as the high-risk 'DeFi' layer, and the T. Rowe Price challenge as the educational 'glue' that holds it all together."
+
+**[0:30 - 1:00] The "TradFi" Loop**
+
+> "When you start the game, our backend *instantly* creates a Capital One customer and a new Solana wallet for you.
+>
+> Let's simulate a month. First, you get a **paycheck**.
+>
+> *[CLICK 'Get Paycheck']*
+>
+> "You see our Nessie Checking Account balance just went up by $2,000.
+>
+> "Now, **bills are due**.
+>
+> *[CLICK 'Pay Bills']*
+>
+> "A $1,500 withdrawal hits. This is your stable, predictable financial life. You have $500 left. You can move it to your **Nessie Savings Account**."
+>
+> *[Move $100 to Savings]*
+>
+> "It's safe, and you can even see the (simulated) interest ticking up. But it's slow. What about growth?"
+
+**[1:00 - 2:00] The "DeFi" Loop (The "WOW" Moment)**
+
+> "This is where we use Solana. Let's 'bridge' $100 to our DeFi wallet.
+>
+> *[CLICK 'Bridge to Solana']*
+>
+> "In the background, our server just did two things: it **withdrew $100 from Capital One** and **airdropped 100 of our own 'BridgeFolio Coin' (FVC)**—a custom SPL token—to our user's Solana wallet.
+>
+> "Now, look at the DeFi dashboard. This is the 'high-risk' world.
+>
+> "This token balance? It's coming from a **live WebSocket subscription to the Solana devnet**.
+>
+> "This price? It's being fed from our own backend volatility engine. Watch it... *[Price jumps]* ...see that?
+>
+> "Your $100 is now $115... now it's $92. This is **real volatility**, streaming at Solana's speed. This isn't just a number in a database; it's a real token in a real wallet."
+
+**[2:00 - 2:45] The Lesson (T. Rowe Price)**
+
+> "After a few 'months' of you playing, our **AI Mentor** pops up. Because our portfolio is now 100% in high-risk DeFi, it's warning us about **Volatility** and the need for **Diversification**.
+>
+> *[Show the "High Roller" pop-up]*
+>
+> "If we had put everything in savings, it would have taught us about **Risk vs. Return**. This is the T. Rowe Price challenge, brought to life."
+
+**[2:45 - 3:00] The Conclusion**
+
+> "By mashing up Capital One's stable API with Solana's high-speed ledger, BridgeFolio creates a perfect sandbox to *experience* the exact financial concepts T. Rowe Price asked for.
+>
+> We're [Team Name]. Thank you."

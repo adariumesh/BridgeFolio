@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(mkdir:*)",
+      "Bash(ls:*)",
+      "Bash(solana:*)",
+      "Bash(brew install:*)",
+      "Bash(spl-token:*)",
+      "Bash(cargo install:*)",
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "Bash(rm:*)",
+      "Bash(cp:*)",
+      "Bash(node server.js)",
+      "Bash(curl:*)"
+    ],
+    "deny": []
+  }
+}
