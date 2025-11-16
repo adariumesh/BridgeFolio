@@ -30,36 +30,62 @@ function App() {
     return () => clearInterval(priceInterval);
   }, []);
 
-  // Mentor logic - watches portfolio allocation
+  // Mentor logic - watches portfolio allocation and gets AI advice
   useEffect(() => {
-    if (!gameData) return;
+    if (!gameData || !user) return;
 
     const totalValue = gameData.checkingBalance + gameData.savingsBalance + gameData.deFiValue;
     if (totalValue < 500) return; // Don't trigger too early
 
     const riskRatio = gameData.deFiValue / totalValue;
 
-    // Trigger educational messages based on allocation
-    if (riskRatio < 0.1 && gameData.savingsBalance > 100) {
-      setMentorMessage({
-        title: "Playing it Safe!",
-        body: "Your money is secure, but you're missing out on growth potential. This demonstrates the Risk vs. Return tradeoff - safer investments typically offer lower returns.",
-        concept: "Risk vs. Return"
-      });
-    } else if (riskRatio > 0.7) {
-      setMentorMessage({
-        title: "High Roller Alert!",
-        body: "Whoa! You're heavily invested in DeFi. Your portfolio is experiencing high Volatility - prices can swing dramatically. Consider Diversification to reduce risk.",
-        concept: "Volatility & Diversification"
-      });
-    } else if (riskRatio > 0.3 && riskRatio < 0.7) {
-      setMentorMessage({
-        title: "Great Job!",
-        body: "You've built a balanced portfolio! This demonstrates good Asset Allocation - spreading investments across different risk levels to optimize returns while managing risk.",
-        concept: "Asset Allocation"
-      });
+    // Only trigger for significant allocation changes
+    const shouldTrigger = 
+      (riskRatio < 0.1 && gameData.savingsBalance > 100) ||
+      (riskRatio > 0.7) ||
+      (riskRatio > 0.3 && riskRatio < 0.7);
+
+    if (shouldTrigger) {
+      // Debounce to avoid too many calls
+      const timer = setTimeout(async () => {
+        try {
+          const response = await axios.post(`${API_BASE_URL}/api/mentor-advice`, {
+            userId: user.userId
+          });
+          
+          if (response.data.advice) {
+            setMentorMessage(response.data.advice);
+          }
+        } catch (error) {
+          console.error('Failed to get mentor advice:', error);
+          // Fallback to simple message
+          let fallbackMessage;
+          if (riskRatio < 0.1) {
+            fallbackMessage = {
+              title: "Playing it Safe!",
+              body: "Your money is secure, but you're missing out on growth potential. This demonstrates the Risk vs. Return tradeoff.",
+              concept: "Risk vs. Return"
+            };
+          } else if (riskRatio > 0.7) {
+            fallbackMessage = {
+              title: "High Roller Alert!",
+              body: "You're heavily invested in DeFi. Your portfolio is experiencing high Volatility. Consider Diversification to reduce risk.",
+              concept: "Volatility & Diversification"
+            };
+          } else {
+            fallbackMessage = {
+              title: "Great Job!",
+              body: "You've built a balanced portfolio! This demonstrates good Asset Allocation.",
+              concept: "Asset Allocation"
+            };
+          }
+          setMentorMessage(fallbackMessage);
+        }
+      }, 2000); // 2 second debounce
+
+      return () => clearTimeout(timer);
     }
-  }, [gameData]);
+  }, [gameData, user]);
 
   const createNewGame = async () => {
     setLoading(true);
@@ -85,6 +111,14 @@ function App() {
       setGameData(response.data);
     } catch (error) {
       console.error('Failed to refresh game data:', error);
+      // If user doesn't exist on backend, clear local storage and restart
+      if (error.response?.status === 404) {
+        console.log('User not found on backend - clearing localStorage');
+        localStorage.clear();
+        setUser(null);
+        setGameData(null);
+        alert('Session expired. Please start a new game.');
+      }
     }
   };
 
@@ -97,6 +131,15 @@ function App() {
       refreshGameData(userData.userId);
     }
   }, []);
+
+  const resetGame = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    setUser(null);
+    setGameData(null);
+    setMentorMessage(null);
+    window.location.reload();
+  };
 
   if (!user) {
     return (
@@ -122,6 +165,25 @@ function App() {
           onClose={() => setMentorMessage(null)}
         />
       )}
+      
+      <button 
+        onClick={resetGame}
+        style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          padding: '10px 20px',
+          background: '#f56565',
+          color: 'white',
+          border: 'none',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          fontWeight: 'bold',
+          zIndex: 9999
+        }}
+      >
+        🔄 Reset Game
+      </button>
     </div>
   );
 }

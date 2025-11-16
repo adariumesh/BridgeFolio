@@ -60,8 +60,9 @@ body {
   font-weight: bold;
   font-size: 1.2rem;
   padding: 0.5rem 1rem;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.25);
   border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.3);
 }
 
 .bridge-symbol {
@@ -71,15 +72,17 @@ body {
 
 .education {
   font-style: italic;
-  color: #ffd700;
+  color: #e1bee7;
+  text-shadow: 0 0 10px rgba(213, 0, 249, 0.5);
 }
 
 .game-description {
   max-width: 600px;
   margin: 2rem 0;
-  background: rgba(0,0,0,0.2);
+  background: rgba(0,0,0,0.25);
   padding: 2rem;
   border-radius: 15px;
+  border: 1px solid rgba(255,255,255,0.2);
 }
 
 .game-description h2 {
@@ -98,17 +101,18 @@ body {
 }
 
 .start-game-btn {
-  background: linear-gradient(45deg, #ff6b6b, #feca57);
+  background: linear-gradient(45deg, #7c4dff, #536dfe);
   color: white;
   border: none;
   padding: 1rem 2rem;
   font-size: 1.3rem;
   font-weight: bold;
-  border-radius: 50px;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
   margin: 2rem 0;
-  min-width: 250px;
+  min-width: 320px;
+  box-shadow: 0 4px 20px rgba(124, 77, 255, 0.5);
 }
 
 .start-game-btn:hover:not(:disabled) {
@@ -126,50 +130,59 @@ body {
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
+  background: linear-gradient(135deg, #f3e7ff 0%, #e1d4f7 50%, #d4c5f9 100%);
+  min-height: 100vh;
+  border-radius: 20px 20px 0 0;
 }
 
 .dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: white;
+  background: linear-gradient(135deg, #7c4dff, #6a1b9a);
   padding: 1.5rem;
   border-radius: 15px;
   margin-bottom: 2rem;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 5px 20px rgba(124, 77, 255, 0.3);
 }
 
 .dashboard-header h1 {
-  color: #4a5568;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .user-info {
   display: flex;
   align-items: center;
   gap: 1rem;
+  color: white;
 }
 
 .refresh-btn {
-  background: #4299e1;
+  background: rgba(255, 255, 255, 0.3);
   color: white;
-  border: none;
+  border: 2px solid rgba(255, 255, 255, 0.5);
   padding: 0.5rem 1rem;
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
+  backdrop-filter: blur(10px);
 }
 
 .refresh-btn:hover:not(:disabled) {
-  background: #3182ce;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
 }
 
 /* Portfolio Overview */
 .portfolio-overview {
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
   padding: 2rem;
   border-radius: 15px;
   margin-bottom: 2rem;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 5px 20px rgba(124, 77, 255, 0.2);
+  border: 2px solid rgba(124, 77, 255, 0.1);
 }
 
 .portfolio-stats {
@@ -186,18 +199,21 @@ body {
 }
 
 .stat-card.total {
-  background: linear-gradient(135deg, #4299e1, #3182ce);
+  background: linear-gradient(135deg, #7c4dff, #6a1b9a);
   color: white;
+  box-shadow: 0 4px 20px rgba(124, 77, 255, 0.4);
 }
 
 .stat-card.tradfi {
-  background: linear-gradient(135deg, #48bb78, #38a169);
+  background: linear-gradient(135deg, #2e7d32, #1b5e20);
   color: white;
+  box-shadow: 0 4px 20px rgba(46, 125, 50, 0.3);
 }
 
 .stat-card.defi {
-  background: linear-gradient(135deg, #ed8936, #dd6b20);
+  background: linear-gradient(135deg, #d500f9, #aa00ff);
   color: white;
+  box-shadow: 0 4px 20px rgba(213, 0, 249, 0.4);
 }
 
 .stat-card h3 {
@@ -231,12 +247,12 @@ body {
 }
 
 .tradfi-bar {
-  background: #48bb78;
+  background: linear-gradient(90deg, #2e7d32, #43a047);
   transition: width 0.3s ease;
 }
 
 .defi-bar {
-  background: #ed8936;
+  background: linear-gradient(90deg, #d500f9, #e040fb);
   transition: width 0.3s ease;
 }
 
@@ -255,11 +271,15 @@ body {
 }
 
 .tradfi-panel {
-  border-left: 5px solid #48bb78;
+  border-left: 5px solid #2e7d32;
+  border-top: 3px solid #7c4dff;
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .defi-panel {
-  border-left: 5px solid #ed8936;
+  border-left: 5px solid #d500f9;
+  border-top: 3px solid #7c4dff;
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .panel h2 {
@@ -304,23 +324,27 @@ body {
 }
 
 .action-btn.paycheck {
-  background: #48bb78;
+  background: #2e7d32;
   color: white;
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
 }
 
 .action-btn.bills {
-  background: #f56565;
+  background: #c62828;
   color: white;
+  box-shadow: 0 2px 8px rgba(198, 40, 40, 0.3);
 }
 
 .action-btn.transfer {
-  background: #4299e1;
+  background: #7c4dff;
   color: white;
+  box-shadow: 0 2px 8px rgba(124, 77, 255, 0.4);
 }
 
 .action-btn.bridge {
-  background: linear-gradient(45deg, #ed8936, #dd6b20);
+  background: linear-gradient(45deg, #d500f9, #aa00ff);
   color: white;
+  box-shadow: 0 2px 8px rgba(213, 0, 249, 0.4);
 }
 
 .action-btn:hover:not(:disabled) {
@@ -403,11 +427,11 @@ body {
 }
 
 .current-price.positive {
-  color: #48bb78;
+  color: #2e7d32;
 }
 
 .current-price.negative {
-  color: #f56565;
+  color: #c62828;
 }
 
 .price-change {
@@ -426,7 +450,7 @@ body {
 
 .price-point {
   width: 8px;
-  background: linear-gradient(to top, #ed8936, #fbb945);
+  background: linear-gradient(to top, #d500f9, #e040fb);
   border-radius: 4px 4px 0 0;
   min-height: 5px;
   transition: all 0.3s ease;
@@ -474,7 +498,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #48bb78;
+  color: #d500f9;
   font-weight: bold;
   font-size: 0.9rem;
   margin-top: 1rem;
@@ -483,9 +507,10 @@ body {
 .pulse {
   width: 12px;
   height: 12px;
-  background: #48bb78;
+  background: #d500f9;
   border-radius: 50%;
   animation: pulse 2s infinite;
+  box-shadow: 0 0 10px rgba(213, 0, 249, 0.6);
 }
 
 /* Mentor Popup */
@@ -529,11 +554,12 @@ body {
 }
 
 .concept-tag {
-  background: #4299e1;
+  background: linear-gradient(135deg, #7c4dff, #6a1b9a);
   color: white;
   padding: 0.3rem 0.8rem;
   border-radius: 15px;
   font-size: 0.8rem;
+  box-shadow: 0 2px 8px rgba(124, 77, 255, 0.4);
 }
 
 .close-btn {
@@ -566,12 +592,29 @@ body {
 }
 
 .trowe-price-badge {
-  background: linear-gradient(135deg, #4299e1, #3182ce);
+  background: linear-gradient(135deg, #7c4dff, #6a1b9a);
   color: white;
   padding: 0.8rem;
   border-radius: 10px;
   text-align: center;
   font-size: 0.9rem;
+  box-shadow: 0 4px 12px rgba(124, 77, 255, 0.4);
+}
+
+.ai-badge {
+  background: linear-gradient(135deg, #f093fb, #f5576c);
+  color: white;
+  padding: 0.6rem;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 0.85rem;
+  margin-top: 0.8rem;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
 }
 
 .mentor-actions {
@@ -579,16 +622,17 @@ body {
 }
 
 .primary-btn {
-  background: linear-gradient(45deg, #4299e1, #3182ce);
+  background: linear-gradient(45deg, #7c4dff, #6a1b9a);
   color: white;
   border: none;
   padding: 1rem 2rem;
-  border-radius: 10px;
+  border-radius: 8px;
   font-weight: bold;
   cursor: pointer;
   width: 100%;
   font-size: 1.1rem;
   transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(124, 77, 255, 0.4);
 }
 
 .primary-btn:hover {
